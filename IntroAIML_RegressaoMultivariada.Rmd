@@ -1,0 +1,301 @@
+---
+title: "Regresssão Linear Multivariada"
+subtitle: Mini-curso de Introdução a ML e AI
+author: Mário Olímpio de Menezes
+date: "Maio/2020"
+output: 
+  beamer_presentation:
+    theme: "metropolis"
+    fonttheme: "professionalfonts"
+    highlight: tango
+    df_print: kable
+    toc: false
+    includes:
+      in_header: IntroAIML_preamble.tex
+  header-includes:
+    \usepackage{listings}
+    \usepackage{appendixnumberbeamer}
+    \usepackage{amsmath}
+    \usefonttheme{serif} 
+    \usepackage{fontspec}
+    \setmainfont{"Liberation Serif"}
+classoption: aspectratio=1610,numbering=fraction,background=dark,progressbar=foot
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment="",prompt=TRUE,collapse=TRUE,strip.white=TRUE,tidy=TRUE,tidy.opts = list(width.cutoff=50,size="scriptsize",continue=" "),warning = FALSE,message = FALSE,  knitr.kable.NA = '',eval = TRUE)
+options(continue = " ")
+```
+
+
+# Regressão Linear Multivariada
+
+## Regressão Linear Multivariada ou *Múltipla*
+
+* Quando temos mais do que uma variável preditora (explicativa), a regressão linear simples se transforma em **regressão linear multivariada**.
+    * Uma regressão quadrática tem duas preditoras ($X$ e $X^2$).
+    * A regressão cúbica tem três preditoras ($X, X^2, \mbox{ e} X^3$).
+    * Uma regressão polinomial é um caso especial de uma regressão múltipla
+    
+## Impacto da Multicolinearidade
+
+* A habilidade de uma variável independente **adicional**  melhorar o modelo de regressão está relacionada não somente à sua correlação com a variável dependente, mas também às correlações da variável independente adicional com as outras variáveis independentes já presentes no modelo.
+    * **Colinearidade** é a associação, medida como correlação, entre duas variáveis independentes.
+    * **Multicolinearidade** se refere à correlação entre três ou mais variáveis independentes, (evidenciada quando uma é *regredida* em relação às outras).
+
+### {-}
+
+O impacto da multicolinearidade é reduzir qualquer poder preditivo de uma variável independente única pela extensão a qual ela está associada com outra variável independente. 
+
+## Impacto da Multicolinearidade
+
+* Conforme a colinearidade aumenta, a variância única explicada por cada variável independente diminui e o percentual de predição compartilhada aumenta. 
+    * Como esta predição compartilhada somente conta uma vez, a predição total *aumenta* muito mais lentamente quando variáveis altamente correlacionadas são adicionadas ao modelo.
+
+* Para maximizar a predição de um dado número de variáveis independentes, devemos procurar aquelas que tenham baixa multicolinearidade com outras variáveis independentes mas que **também** tenham alta correlações com a variável dependente.
+
+## Criando Variáveis Adicionais
+
+\small
+* O relacionamento básico representado na regressão múltipla é a associação *linear* entre a variável dependente (métrica) e as variáveis independentes (também métricas).
+* Um problema frequentemente encontrado é a incorporação de dados não-métricos, tais como gênero, ocupação, etc., na equação de regressão.
+    * A regressão múltipla é limitada a dados métricos (numéricos).
+* Outro problema é a inabilidade de se representar diretamente relacionamentos não lineares.
+* Quando temos estas situações, novas variáveis devem ser criadas por **transformações**:
+    * Esta é a maneira de incorporarmos variáveis não-métricas ou para representar quaisquer outros efeitos além de relacionamentos não lineares.
+    * Outro uso de *transformações* é para acertar violações de alguma das premissas (hipóteses) estatísticas. 
+* Duas razões básicas para transformarmos variáveis:
+    * Melhorar ou modificar o relacionamento entre as variáveis dependente e independentes.
+    * Habilitar o uso de variáveis não métricas na equação de regressão.
+
+
+
+## Exemplo 1 
+
+
+### Montgomery, Peck e Vining - Pacoate `MPV`
+
+\vspace{0.5\baselineskip}
+A variável resposta é o calor liberado por grama de cimento, e as variáveis explicativas quanto tem de cada componente; são elas:
+
+
++ Y = heat evolved in calories per gram of cement 
++ X1 = tricalcium aluminate
++ X2 = tricalcium silicate
++ X3 = tetracalcium alumino ferrite
++ X4 = dicalcium silicate
+
+## Obtendo os dados  
+
+\columnsbegin
+\column{0.45\textwidth}
+\scriptsize
+```{r  }
+library(MPV)
+```
+```{r  }
+cimento <- MPV::cement
+names(cimento)
+```
+
+```{r}
+str(cimento)
+```
+
+```{r out.width="0.4\\textwidth", eval = FALSE}
+library(ggcorrplot)
+ggcorrplot(cor(cimento),type = "lower",lab=TRUE, colors = c("blue", "white", "red"))
+```
+\column{0.5\textwidth}
+
+\scriptsize
+```{r out.width="0.7\\textwidth", echo = FALSE}
+library(ggcorrplot)
+ggcorrplot(cor(cimento),type = "lower",lab=TRUE, colors = c("blue", "white", "red"),lab_size = 8)
+```
+
+* Olhando a matriz de correlação identificamos dois pares de variáveis com correlações significativas entre si: $(x1,x3)$ correlação $-0.82$ e $(x2,x4)$ correlação de $-0.97$
+* Estas variáveis, quando as adicionarmos todas ao modelo, vão *bagunçar* o algoritmo e os resultados serão comprometidos.
+
+\columnsend
+
+## Construindo o Modelo
+
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r  }
+modcim <- lm(y ~ x1 + x2 + x3 + x4, data = cimento)
+summary(modcim)
+```
+
+\column{0.4\textwidth}
+\scriptsize
+
+* Olhando o modelo, vemos que **todos** os parâmetros estão sem significância estatística, *como tínhamos previsto* a partir dos dados da matriz de correlação: **multicolinearidade**
+* Apesar disto, o modelo tem um R$^2$ ajustado _maravilhoso_, de 0.9736
+* Mas, precisamos acertar o modelo, removendo as variáveis que não têm significância estatística.
+* Começamos pela última variável, $x4$
+
+\columnsend
+
+## Atualizando o Modelo 
+
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r  }
+modcim <- update(modcim, . ~ . - x4)
+summary(modcim)
+```
+
+\column{0.4\textwidth}
+\scriptsize
+
+* Usando a função `update` vamos *atualizar* o nosso modelo, removendo a variável $x4$
+* Fazendo sumário do modelo atualizado, já identificamos uma melhora significativa nos parâmetros.
+* Apenas a variável $x3$ continua sem significância estatística, e portanto, vamos removê-la do modelo.
+
+\columnsend
+
+
+## Atualizando o Modelo 
+
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r  }
+modcim <- update(modcim, . ~ . - x3)
+summary(modcim)
+```
+
+\column{0.4\textwidth}
+\scriptsize
+
+* Vemos agora que todos os parâmetros têm significância estatística, e o R$^2$ ajustado do modelo está *muito bom*, 0.9744.
+* E também vemos que o `p-value` do modelo é muito bom ($4.407\times 10^{-9}$), ou seja, praticamente zero. 
+* Isso significa que este modelo é estatísticamente diferente do modelo nulo, ou seja, somente a aleatoriedade (sem nenhum parâmetro) **não** consegue explicar a variabilidade de $y$ -- nossa variável resposta. 
+* O teste com a ANOVA mostra exatamente isso. Veja o `Pr(>F)` com valor **zero** (arredondamento do $4.407\cdot 10^{-9}$)
+
+
+\tiny
+```{r}
+modelonulo <- lm(y ~ 1, data = cimento)
+anova(modelonulo,modcim)
+```
+
+\columnsend
+
+
+## Diagnóstico do Modelo
+
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r out.height="5cm" }
+par(mfrow=c(2,2))
+plot(modcim)
+```
+
+\column{0.4\textwidth}
+\tiny
+* Analisaremos os dois gráficos superiores: *Residuals vs Fitted* e *Normal Q-Q*.
+* O Gráficos dos *Residuals vs Fitted values* é onde analisamos se a variabilidade dos resíduos tem dependência com os valores ajustados, se aumenta ou diminui, se demonstra algum padrão, etc. No gráfico ao lado, não conseguimos identificar este tipo de comportamento, a amplitude de variação dos resíduos é basicamente a mesma ao longo de todos os valores ajustados.
+* O Gráfico *Normal Q-Q* analisamos se os resíduos têm distribuição normal. Quando isso acontece, os pontos do gráfico (topo, à direita), devem permanecer sobre a linha tracejada, sem grandes desvios, principalmente nas extremidades, o que parece acontecer.
+* O Gráfico *Scale-Location* tem basicamente a mesma informação do *Residuals vs Fitted*, mas com valores absolutos dos resíduos padronizados; serve também para identificarmos dependência em relação aos valores ajustados.
+* O Gráfico *Residuals vs Leverage* aponta observações que podem precisar de atenção por serem *outliers*, pontos de alta alavancagem, etc., que distorcem o ajuste, prejudicando sua qualidade. 
+Não vamos analisar este último gráfico neste material.
+
+\columnsend
+
+## Diagnóstico do Modelo
+
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r  }
+library(gvlma)
+display.gvlmatests(gvlma(modcim))
+```
+
+\column{0.4\textwidth}
+\tiny
+* Apesar de os gráficos diagnósticos permitirem uma rápida inspeção visual se o modelo atende às premissas do Método dos Mínimos Quadrados (MMQ), esta análise tem um aspecto subjetivo que depende da habilidade do observador.
+* Para tornar o diagnóstico mais objetivo, o pacote `gvlma` oferece uma função que faz uma avaliação global do modelo com relação ao atendimento às premissas do MMQ.
+* Olhando os resultados ao lado vemos que nosso modelo atendeu a todas as premissas. Os testes estatísticos tem a hipótese nula de que o modelo atende as premissas. Pelos `p-values` maiores do que o nível de significância (0.05), todos os critérios indicam a aceitação da hipótese nula.
+
+\columnsend
+
+## Exemplo 2 - Dataset hipotético
+
+\footnotesize
+
+Este segundo exemplo utiliza um *dataset* hipotético com duas variáveis explicativas ($x1$ e $x2$).
+
+Como já fiz no exemplo anterior as análises das etapas de construção e análise do modelo, comentarei apenas rapidamente a interpretação dos parâmetros do modelo -- a última parte.
+
+\scriptsize
+
+```{r }
+library(readr)
+novodf <- read_csv("datasets/dadoshipot.csv")
+```
+
+
+```{r }
+cor(novodf)
+```
+
+## Modelo Exemplo II
+
+
+\scriptsize
+```{r }
+summary(modhipot <- lm(y ~ x1 + x2, data = novodf))
+```
+
+## Diagnóstico do Modelo
+\scriptsize
+```{r out.height="6cm"}
+par(mfrow=c(2,2))
+plot(modhipot)
+```
+
+
+## Diagnóstico do Modelo
+
+\scriptsize
+```{r }
+display.gvlmatests(gvlma(modhipot))
+```
+
+## Interpretando os resultados do modelo
+
+\columnsbegin
+\column{0.5\textwidth}
+\scriptsize
+```{r}
+summary(modhipot)
+```
+\column{0.45\textwidth}
+\tiny
+```{r tidy.opts=list(width.cutoff=40)}
+summary(novodf)
+```
+
+
+\footnotesize
+
+**Interpretando os resultados do modelo**
+
+\scriptsize
+
+* O nosso modelo final tem os coeficientes `r coef(modhipot)` e podemos então escrevê-lo na forma
+$$y = -1665.9399 + 10.7812 \times x1 -15.6050 \times x2$$
+* Vemos que $x1$ tem um impacto de 10.7812 no valor de $y$ para cada variação de uma unidade, mantendo-se o valor de $x2$ constante. Por outro lado, $x2$ tem um impacto negativo de -15.6050 no valor de $y$ para cada unidade de variação, mantendo-se o valor de $x1$ constante.
+
+\columnsend
+
+## Próximo Bloco {.standout}
+
+ Regressão Logística

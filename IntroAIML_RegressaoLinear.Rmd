@@ -1,20 +1,22 @@
 ---
 title: "Regresssão Linear - Introdução"
-subtitle: Mini-curso de Introdução a ML e AI
-author: Mário Olímpio de Menezes
+author: \large Mário Olímpio de Menezes 
+date: "Maio -- 2020"
 output: 
   beamer_presentation:
     theme: "metropolis"
     fonttheme: "professionalfonts"
     highlight: tango
+    df_print: kable
     toc: false
-  includes:
-    in_header: IntroAIML_preamble.tex
+    includes:
+      in_header: IntroAIML_preamble.tex
   header-includes:
     \usepackage{listings}
     \usepackage{appendixnumberbeamer}
     \usepackage{amsmath}
-    \usefonttheme{serif} 
+    \usepackage{fontawesome}
+    \usefonttheme{serif}
     \usepackage{fontspec}
     \setmainfont{"Liberation Serif"}
 classoption: aspectratio=1610,numbering=fraction,background=dark,progressbar=foot
@@ -23,16 +25,36 @@ classoption: aspectratio=1610,numbering=fraction,background=dark,progressbar=foo
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(comment="",prompt=FALSE,collapse=TRUE,strip.white=TRUE,tidy=TRUE,tidy.opts = list(width.cutoff=60,size="scriptsize",continue=" "),warning = FALSE,message = FALSE)
+knitr::opts_chunk$set(comment="",prompt=TRUE,collapse=TRUE,strip.white=TRUE,tidy=TRUE,tidy.opts = list(width.cutoff=60,size="scriptsize",continue=" "),warning = FALSE,message = FALSE, eval = TRUE)
 options(continue = " ")
 ```
 
-\metroset{sectionpage=progressbar}
 
-<!-- The R Book 2nd Edition - -->
+# About me
 
 
-<!-- do livro Practical Regression and ANOVA with R - de Julian J. Faraway -->
+## Me
+
+
+\columnsbegin
+\column{5cm}
+
+\resizebox{3cm}{!}{
+\includegraphics{example-image}
+}
+
+
+\column{0.45\textwidth}
+
+\Large
+\begin{tabular}{lcl}
+\faGraduationCap  &  & Físico \\
+\faInstitution  &  & Professor e Pesquisador \\
+\faGithub & & momenezes \\
+\faLinkedin & & mariomenezes 
+\end{tabular}
+\columnsend
+
 
 # Regressão Linear 
 
@@ -43,7 +65,7 @@ options(continue = " ")
 
 * A Análise de Regressão é utilizada para se explicar ou modelar o relacionamento entre uma única variável $Y$, chamada de variável *resposta*, *de saída* ou *dependente* e uma ou mais variáveis *preditoras*, *de entrada* ou *explicativas*, $X_1, X_2, ..., X_p$.
 * Quando $p = 1$, é chamada regressão simples;
-    + Quando $p > 1$ é chamada regressão múltipla ou algumas vezes, regressão multivariada.
+    + Quando $p > 1$ é chamada regressão múltipla ou *regressão multivariada*.
 * A variável resposta deve ser uma variável contínua
 * As variáveis explicativas podem ser contínuas, discretas ou categóricas.
 
@@ -69,6 +91,189 @@ options(continue = " ")
 * Legendre desenvolveu o método dos mínimos quadrados em 1805.
 * Gauss disse que o tinha desenvolvido alguns anos antes e mostrou, em 1809, que os mínimos quadrados eram a solução ótima quando os erros tem uma distribuição normal.
 * A metodologia ficou restrita às ciências físicas até a parte final do século 19, quando em 1875, Francis Galton cunhou o termo *regressão à mediocridade*. 
+
+## Modelos
+
+### Um estatístico britânico chamado George Box escreveu:
+
+\vspace{0.5\baselineskip}
+\begin{center}
+\colorbox{black}{\textcolor{white}{“Todos os modelos são errados, alguns são úteis.”}}
+\end{center}
+
+### O que é um modelo
+
++ Um modelo é uma abstração da realidade;
++ Necessariamente deixa de lados alguns aspectos *menos relevantes*;
++ É uma simplificação proposital para um propósito específico.
+
+Estamos vivendo uma explosão de modelos:
+
++ Modelos Epidemiológicos 
++ Modelos de crescimento da economia
++ Modelos financeiros
++ Modelos, modelos e modelos
+
+## Modelagem Estatística
+
+
+* Uma das coisas mais sensíveis e importantes quando se começa é a escolha do tipo correto de análise estatística. A escolha depende:
+    + da natureza dos dados 
+    + da questão que se quer responder, entre outras coisas.
+* A chave é entender que tipo de variável *resposta* você tem e saber a natureza de suas variáveis *explicativas*.
+    + A variável *resposta* é coisa com a qual você está trabalhando:
+        + é a variável cuja variação você está tentando entender!
+        + é a variável que você está tentando prever; 
+        + é a que vai no eixo *y* do gráfico.
+    + A variável *explicativa* vai no eixo *x* do gráfico.
+        + você está interessado em entender como a variação da variável *resposta* está associada com a variação da variável *explicativa*.
+
+## Modelagem Estatística
+
+* Você também precisa considerar o *modo* que as variáveis na sua análise medem o que elas se propõem a medir.
+* Uma medida contínua é uma variável do tipo altura ou peso que pode assumir valores com números reais.
+* Uma variável categórica é um fator com dois ou mais níveis: 
+    + sexo é um fator com dois níveis (masculino e feminino)
+    + cor pode ser um fator com sete níveis (vermelho, laranja, amarelo, verde, azul, índigo e violeta)
+* Portanto, é essencial responder às seguintes questões:
+    + Qual das variáveis é **a variável resposta**?
+    + Quais são as variáveis explicativas?
+    + As variáveis explicativas são contínuas ou categóricas, ou uma mistura de ambas?
+    + Que tipo de variável resposta temos: 
+         + é uma medida contínua?  uma contagem?  uma proporção?  um tempo (ocasião) de morte?  ou uma categoria?
+
+## Variáveis
+
+\columnsbegin
+\column{0.7\textwidth}
+\scriptsize
+```{r echo=FALSE, eval =TRUE}
+library(readr)
+library(kableExtra)
+library(knitr)
+car_data <- read_csv("~/datasets/kaggle/car data.csv")
+car_data[1:3,c(1:6)] #%>% kable(caption="Car Data")
+insurance <- read_csv("~/datasets/kaggle/insurance.csv")
+insurance[1:3,] #%>% kable(caption="Insurance data")
+library(readxl)
+lowbwt <- read_excel("datasets/lowbwt.xls")
+lowbwt[1:3,c(2,4,5)] #%>% kable(caption="Low birth weight data")
+```
+
+\vspace{0.5\baselineskip}
+\footnotesize
+**Codificação de Variáveis**
+\scriptsize
+
+* Uma coisa que é preciso atenção nos *datasets* é a codificação de variáveis categóricas utilizando-se números, como no último *dataset* mostrado.
+* A variável **RACE** é categórica, mas está codificada com números (1,2,3, ...).
+* Ao se manipular estes dados é preciso cuidado para que esta variável seja tratada como categórica e não como numérica.
+
+
+\column{0.3\textwidth}
+
+\footnotesize
+**Escalas de Mensuração**
+\tiny
+
+* Nominal -- usada para rotular variáveis, sem valor quantitativo
+* Ordinal -- nesta escala, a ordem dos valores é o que é importante e significante, mas as diferenças entre os níveis não é conhecida.
+* Intervalar -- é uma escala numérica, na qual nós conhecemos tanto a ordem como a diferença exata entre os valores. A escala intervalar não tem um zero significativo, isto é, o zero não significa "ausência", mas é simplesmente mais um intervalo na escala. Isto limita as operações possíveis com esta escala.
+* Razão -- esta é a escala completa: conhecemos a ordem, a diferença exata entre os valores e ela tem um zero significativo, ou seja, o zero significa realmente "ausência" daquela característica, o que nos permite realizar todas as operações.
+
+
+\columnsend
+
+## Método Estatístico Apropriado
+
+Algumas *chaves* simples para a escolha do método estatístico apropriado
+
+### As variáveis explicativas
+
+\small
+
+1. Todas as variáveis explicativas são contínuas  $\Rightarrow$  **Regressão**
+   + É possível realizar uma Regressão com variáveis explicativas contínuas e categóricas (transformando)
+2. Todas as variáveis explicativas são categóricas $\Rightarrow$  **Análise de Variância (ANOVA)**
+3. Variáveis explicativas são tanto contínuas como categóricas $\Rightarrow$  **Análise de Covariância (ANCOVA)**
+
+\normalsize
+
+### A variável resposta
+
+\small
+
+1. Contínua   $\Rightarrow$    **Regressão Normal, ANOVA ou ANCOVA**
+2. Proporção $\Rightarrow$     **Regressão Logística**
+3. Contagem  $\Rightarrow$     **Modelos log-linear**
+4. Binária  $\Rightarrow$     **Análise logística binária**
+5. Tempo na morte $\Rightarrow$   **Análise de sobrevivência**
+
+
+## Objetivo da Modelagem Estatística
+
+* Determinar os valores dos parâmetros em um modelo específico que *levam ao melhor ajuste do modelo aos dados*
+* Os dados são *sacrosantos*; eles nos dizem o que realmente aconteceu sob determinadas circunstâncias.
+    + É um erro comum dizer "os dados foram ajustados ao modelo" como se os dados fossem flexíveis, e nós tivéssemos uma estrutura clara do modelo.
+    + É o contrário: o que se procura é o modelo **mínimo adequado** que descreva os dados.
+    + O modelo é ajustado aos dados; não o contrário!
+* O melhor modelo é o que produz o mínimo de variação não explicada (o *mínimo desvio dos resíduos*), sujeito à restrição de que todos os parâmetros no modelo devem ser estatisticamente significantes
+
+
+## Primeiros passos
+
+
+* A melhor coisa a fazer é gastar um tempo substancial, logo de início, para entender os dados e o que eles mostram.
+    + Isto vai ajudar a guiar o pensamento para a modelagem estatística mais apropriada.
+* **Thinking with Data** -- Max Shron
+    + Scoping: Why Before How
+        + *"Most people start working with data from exactly the wrong end. They begin with a data set, then apply their favorite tools and techniques to it. The result is narrow questions and shallow arguments. Starting with data, without first doing a lot of thinking, without having any structure, is a short road to simple questions and unsurprising results. We don’t want unsurprising -- we want knowledge."*
+
+
+
+## Checklist da Modelagem Estatística 
+
+### Checklist
+
+
+* Certificar-se de que o `data.frame` está correto em estrutura e conteúdo:
+    + Todos os valores de cada variável estão na mesma coluna?
+        * **tidy data**
+    + Todos os zeros são realmente 0 ou deveriam ser `NA`?
+    + Cada linha contém o mesmo número de entradas?
+    + Existe algum nome de variável que contém espaço?
+* Depois de carregar os dados, a Análise Exploratória de Dados é **essencial**
+
+## Checklist da Modelagem Estatística
+
+### Sobre o Modelo
+
+* Algumas coisas básicas na escolha do modelo
+    + Quais variáveis explicativas deveriam ser incluídas?
+    + Transformação da variável resposta é necessária?
+    + Interações deveriam ser incluídas?
+    + Termos não lineares deveriam ser incluídos? ($X^2, X^3 ...$)
+    + As variáveis explicativas deveriam ser transformadas?
+* Tente utilizar o tipo mais simples de análise que seja apropriado para seus dados e para a questão que está tentando responder.
+* Ajuste um modelo máximo e vá simplificando-o paulatinamente ao remover parâmetros.
+* Faça o *diagnóstico do modelo*
+* Por fim, documente tudo o que fizer, e explique cada um dos passos. Desta maneira você entenderá o que fez e porque fez quando retornar à sua análise 6 meses mais tarde!
+
+## Especificando o modelo
+
+\vspace{-0.5\baselineskip}
+
+
+* Um modelo incorpora nosso entendimento mecanicista das variáveis explicativas envolvidas, e da maneira que elas estão relacionadas com a variável resposta.
+* Buscamos um modelo **mínimo** por conta do princípio da *parcimônia*\footnote{Procure por "Navalha de Ocam"\  para entender mais sobre este princípio da Parcimônia}, e também um modelo **adequado** 
+* É muito importante entender que *não há **um** modelo*.
+    + em muitos casos, haverá um grande número de modelos diferentes, uns mais plausíveis do que outros.
+* É preciso determinar quais, se algum, dos modelos possíveis, são adequados
+    + e depois, dos adequados, qual é o modelo *mínimo adequado*.
+    + pode haver um conjunto de modelos que descrevem os dados igualmente bem (ou de modo igualmente probre se a variabilidade for grande)
+
+
+
 
 
 
@@ -106,7 +311,9 @@ $$ Y_i = \beta_0 + \beta_1 X_i + e_i, \quad i = 1, 2, \ldots, n $$
 
 
 
-## Regressão por Mínimos Quadrados Ordinários (OLS)
+
+
+## Método dos Mínimos Quadrados Ordinários (OLS)
 
 \small
 
@@ -135,25 +342,28 @@ $$ Y_i = \beta_0 + \beta_1 X_i + e_i, \quad i = 1, 2, \ldots, n $$
   * Brth15to17 -- taxa de nascimento por 1000 meninas de 15 a 17 anos no ano de 2002 --- **Variável Resposta**;
   * PovPct -- taxa de pobreza ---  **Variável Explicativa**.
 
+
+## Exemplo de Regressão Linear Simples 
+
+\columnsbegin
+\column[b]{0.4\textwidth}
 \scriptsize
-```{r}
+```{r out.height="4cm", tidy.opts=list(width.cutoff=30)}
 library(readr)
-poverty_vs_teenbirthrate <- read_table2("~/datasets/poverty_vs_teenbirthrate.txt")
+poverty_vs_teenbirthrate <- read_table2("datasets/poverty_vs_teenbirthrate.txt")
 ```
-
-## Exemplo de Regressão Linear Simples
-
+\column[t]{0.6\textwidth}
 \scriptsize
-```{r out.height="6cm"}
+```{r out.width="0.7\\textwidth", tidy.opts=list(width.cutoff=40)}
 library(ggplot2)
 ggplot(data = poverty_vs_teenbirthrate, aes(x = PovPct, y = Brth15to17)) + geom_point()
 ```
+\columnsend
 
-
-## Modelo de Regressão Linear Simples
+## Modelo de Regressão Linear Simples 
 
 \scriptsize
-```{r}
+```{r  }
 modpoverty <- lm(Brth15to17 ~ PovPct, data = poverty_vs_teenbirthrate)
 summary(modpoverty)
 ```
@@ -182,20 +392,40 @@ O pacote `gvlma` é uma implementação do artigo de Pena \& Slate called "Globa
 * *Link Function*  -- testa se nossa variável dependente é realmente contínua, ou categórica. Se a hipótese nula é rejeitada (`p-value` < 0.05), é uma indicação de que deveríamos utilizar uma forma alternativa do modelo linear generalizado (p.explo, Regressão Logística ou Binomial, etc).
 
 
-## Diagnóstico do Modelo
+## Diagnóstico do Modelo 
 
-\scriptsize
-```{r}
+\footnotesize
+```{r }
 library(gvlma)
 diaggvlma <- gvlma(modpoverty)
-display.gvlmatests(diaggvlma)
+gvlma::display.gvlmatests(diaggvlma)
 ```
 
 
+## Interpretando os resultados do modelo
 
+\columnsbegin
+\column{0.6\textwidth}
+\scriptsize
+```{r}
+summary(modpoverty)
+```
+\column{0.4\textwidth}
+\tiny
+```{r tidy.opts=list(width.cutoff=40)}
+summary(poverty_vs_teenbirthrate[,c("PovPct","Brth15to17")])
+```
 
+\columnsend
 
-## {.standout}
+## Interpretando os resultados do modelo
 
-Muito Obrigado!
+A cada aumento de uma unidade no índice de pobreza, temos um aumento de 1.3733 pontos percentuais na taxa de nascimentos por 1000 meninas de 15 a 17 anos.
+
+No modelo que obtivemos, o *Intercepto* não tem significância estatística (`p-value` = 0.098). Portanto, o modelo final pode ser escrito como:
+$$\textrm{Brth15to17} = 1.3733\times \textrm{PovPct}$$
+
+## Próximo Bloco {.standout}
+
+Regressão Linear Multivariada
 
