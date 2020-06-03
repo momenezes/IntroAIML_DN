@@ -9,8 +9,8 @@ output:
     fonttheme: "professionalfonts"
     highlight: tango
     toc: false
-  includes:
-    in_header: IntroAIML_preamble.tex
+    includes:
+      in_header: IntroAIML_preamble.tex
   header-includes:
     \usepackage{listings}
     \usepackage{appendixnumberbeamer}
@@ -351,41 +351,67 @@ summary(modelo1)
 
 ## Examinando os coeficientes
 
+\columnsbegin
+\column{0.55\textwidth}
 \footnotesize
 ```{r}
 round(exp(coef(modelo1)),3)
 ```
 
-Intervalos de Confiança para o Log das chances (*odds ratio*)
+Intervalos de Confiança para o Log das chances (*odds*)
 
 \footnotesize
 ```{r}
 confint.default(modelo1,level=0.95)
 ```
 
-Agora o Intervalo de Confiança para as probabilidades
+Agora o Intervalo de Confiança para as chances (*odds*)
 
 \footnotesize
 ```{r}
 exp(confint.default(modelo1,level=0.95))
 ```
+\column{0.45\textwidth}
+\scriptsize
+
+* Quando olhamos o intervalo de confiança dos parâmetros estimados, uma análise que podemos fazer é ver se o intervalo passa pelo valor nulo.
+
+* Para a Regressão Linear, o valor nulo do intervalo de confiança é o *zero*. Ou seja, se o intervalo de confiança de um parâmetro estimado contém o *zero*, então este parâmetro não tem significância estatística.
+
+* Quando trabalhamos com a Regressão Logística, o valor nulo do intervalo de confiança é o **um** se estamos falando das chances (*odds*) e é o **zero** se estamos falando do log das chances (*log dos odds*). Isso pode ser visto na tabela que compara os valores de Probabilidade, Odds e Log dos Odds.
+
+* Então, percebemos que o Intercept não tem significância estatística porque o seu intervalo de confiança contém o **zero** quando tomamos o log das chances ou contém o **um** quando tomamos as chances.
+
+\columnsend
+
 
 ## Interpretação do *odds ratio*
 
-Tanto a idade quanto o plano de saúde tem significância estatística no nosso modelo, isto é, com a chance de a autoavaliação de saúde não boa.
+\footnotesize
+```{r}
+round(exp(coef(modelo1)),3)
+```
 
-A chance do indivíduo reportar um estado de saúde não bom aumenta em 14,2% ao aumentar em 1 ano a idade, para a mesma condição de plano de saúde.
+\small
 
-Indivíduos com plano de saúde tem uma chance de reportar um estado de saúde não bom 95,8% menor do que os indivíduos que não tem plano de saúde, para a mesma idade.
+* Tanto a idade quanto o plano de saúde tem significância estatística no nosso modelo, isto é, com a chance de a autoavaliação de saúde não boa.
+
+* A chance do indivíduo reportar um estado de saúde não bom aumenta em 14,2% ao aumentar em 1 ano a idade, para a mesma condição de plano de saúde.
+
+* Indivíduos com plano de saúde tem uma chance de reportar um estado de saúde não bom 95,8% menor do que os indivíduos que não tem plano de saúde, para a mesma idade.
+
+* Os coeficientes do modelo de regressão logística tem um impacto multiplicativo nas chances (tomando o exponencial) ou nos logs das chances (tomando o valor estimado).
 
 
 ## Diagnósticos
 
-\footnotesize
+\columnsbegin
+\column{0.5\textwidth}
+\scriptsize
 Fazendo o diagnóstico do modelo o gráfico dos valores ajustados (preditos) pelos resíduos -- semelhante ao que obtemos no `lm`
 
 \scriptsize
-```{r out.height="6cm", tidy.opts=list(width.cutoff=90)}
+```{r out.height="4.5cm", tidy.opts=list(width.cutoff=40)}
 res <- residuals(modelo1, type="deviance")
 plot(predict(modelo1, type="response"),res,
    xlab="Fitted values", ylab = "Residuals",
@@ -393,6 +419,14 @@ plot(predict(modelo1, type="response"),res,
       )
 abline(h = 0, lty = 2)
 ```
+\column{0.4\textwidth}
+\footnotesize
+
+* Os gráficos diagnósticos de um modelo de regressão logística não fazem muito sentido; por exemplo, no gráfico mostrado ao lado temos no eixo *x* os valores ajustados, onde vemos claramente o resultado da nossa variável resposta ser binária, isto é, temos duas faixas de resíduos: uma para o nível 0 e outra para o nível 1 da variável resposta. Claramente não conseguimos avaliar nada deste gráfico.
+
+* Como nossa variável resposta não é contínua e não temos a premissa de que os resíduos sigam uma distribuição normal, não há porque fazer os demais gráficos diagnósticos.
+
+\columnsend
 
 ## Diagnósticos
 

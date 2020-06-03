@@ -2,19 +2,25 @@
 title: "Introdução à Modelagem Estatística"
 subtitle: Mini-curso de Introdução a ML e AI
 author: "Mário O. de Menezes"
-date: "Quarentena de 2020"
+date: "Maio/2020"
 output: 
   beamer_presentation:
-    theme: "focus"
+    theme: "metropolis"
+    fonttheme: "professionalfonts"
+    highlight: tango
+    latex_engine: xelatex
+    toc: false
     df_print: kable
-includes:
-   in_header: IntroAIML_preamble.tex
-header-includes:
-  \usepackage{biolinum}
-  \usepackage{microtype}
-  \usefonttheme[onlymath]{serif}
-  \usetheme{focus}
-classoption: aspectratio=1610
+  includes:
+    in_header: IntroAIML_preamble.tex
+  header-includes:
+    \usepackage{listings}
+    \usepackage{appendixnumberbeamer}
+    \usepackage{amsmath}
+    \usefonttheme{serif} 
+    \usepackage{fontspec}
+    \setmainfont{"Liberation Serif"}
+classoption: aspectratio=1610,numbering=fraction,background=dark,progressbar=foot
 ---
 
 <!--
@@ -30,7 +36,7 @@ options(continue = " ")
 
 <!-- The R Book 2nd Edition - -->
 
-
+# Modelagem Estatística 
 
 ## Modelos
 
@@ -125,24 +131,12 @@ Algumas *chaves* simples para a escolha do método estatístico apropriado
     + O modelo é ajustado aos dados; não o contrário!
 * O melhor modelo é o que produz o mínimo de variação não explicada (o *mínimo desvio dos resíduos*), sujeito à restrição de que todos os parâmetros no modelo devem ser estatisticamente significantes
 
-## Especificando o modelo
-
-\vspace{-0.5\baselineskip}
-
-
-* Um modelo incorpora nosso entendimento mecanicista das variáveis explicativas envolvidas, e da maneira que elas estão relacionadas com a variável resposta.
-* Buscamos um modelo **mínimo** por conta do princípio da *parcimônia*, e também um modelo **adequado** 
-* É muito importante entender que *não há **um** modelo*.
-    + em muitos casos, haverá um grande número de modelos diferentes, uns mais plausíveis do que outros.
-* É preciso determinar quais, se algum, dos modelos possíveis, são adequados
-    + e depois, dos adequados, qual é o modelo *mínimo adequado*.
-    + pode haver um conjunto de modelos que descrevem os dados igualmente bem (ou de modo igualmente probre se a variabilidade for grande)
 
 ## Primeiros passos
 
-* Um erro muito comum é tentar fazer a modelagem estatística direto.
+
 * A melhor coisa a fazer é gastar um tempo substancial, logo de início, para entender os dados e o que eles mostram.
-    + Isto vai ajudar a guiar o pensamento para a  modelagem estatística mais apropriada.
+    + Isto vai ajudar a guiar o pensamento para a modelagem estatística mais apropriada.
 * **Thinking with Data** -- Max Shron
     + Scoping: Why Before How
         + *"Most people start working with data from exactly the wrong end. They begin with a data set, then apply their favorite tools and techniques to it. The result is narrow questions and shallow arguments. Starting with data, without first doing a lot of thinking, without having any structure, is a short road to simple questions and unsurprising results. We don’t want unsurprising -- we want knowledge."*
@@ -154,7 +148,7 @@ Algumas *chaves* simples para a escolha do método estatístico apropriado
 ### Checklist
 
 
-* Certificar-se de que o `dataframe` está correto em estrutura e conteúdo:
+* Certificar-se de que o `data.frame` está correto em estrutura e conteúdo:
     + Todos os valores de cada variável estão na mesma coluna?
         * **tidy data**
     + Todos os zeros são realmente 0 ou deveriam ser `NA`?
@@ -170,12 +164,27 @@ Algumas *chaves* simples para a escolha do método estatístico apropriado
     + Quais variáveis explicativas deveriam ser incluídas?
     + Transformação da variável resposta é necessária?
     + Interações deveriam ser incluídas?
-    + Termos não lineares deveriam ser incluídos?
+    + Termos não lineares deveriam ser incluídos? ($X^2, X^3 ...$)
     + As variáveis explicativas deveriam ser transformadas?
 * Tente utilizar o tipo mais simples de análise que seja apropriado para seus dados e para a questão que está tentando responder.
 * Ajuste um modelo máximo e vá simplificando-o paulatinamente ao remover parâmetros.
 * Faça o *diagnóstico do modelo*
 * Por fim, documente tudo o que fizer, e explique cada um dos passos. Desta maneira você entenderá o que fez e porque fez quando retornar à sua análise 6 meses mais tarde!
+
+## Especificando o modelo
+
+\vspace{-0.5\baselineskip}
+
+
+* Um modelo incorpora nosso entendimento mecanicista das variáveis explicativas envolvidas, e da maneira que elas estão relacionadas com a variável resposta.
+* Buscamos um modelo **mínimo** por conta do princípio da *parcimônia*, e também um modelo **adequado** 
+* É muito importante entender que *não há **um** modelo*.
+    + em muitos casos, haverá um grande número de modelos diferentes, uns mais plausíveis do que outros.
+* É preciso determinar quais, se algum, dos modelos possíveis, são adequados
+    + e depois, dos adequados, qual é o modelo *mínimo adequado*.
+    + pode haver um conjunto de modelos que descrevem os dados igualmente bem (ou de modo igualmente probre se a variabilidade for grande)
+
+\note{Procure por "Navalha de Ocam" para entender mais sobre este princípio da Parcimônia}
 
 ## Objetivo do Modelo -- Minimizar os resíduos
 
@@ -190,21 +199,8 @@ Algumas *chaves* simples para a escolha do método estatístico apropriado
 * Julgamos o modelo com base em *quão prováveis os dados seriam se o modelo estivesse correto*!
     + Ou seja, o modelo que produz os menores resíduos (diferença entre os valores reais e os preditos).
 
-## O princípio da parcimônia (navalha de Occam)
-\small
 
-* Uma das coisas mais importantes que fazemos na modelagem estatística diz respeito à simplificação de modelos.
-* O princípio da parcimônia é atribuído a um filósofo nominalista britânico do século 14, William de Occam.
-* Ele insistia que, dado um conjunto de explicações igualmente boas para um determinado fenômeno, *a explicação correta é a explicação mais simples*.
-* Este princípio é chamado de "navalha de Occam" porque ele *cortava* suas explicações às formas mais simples: seu argumento era que, ao explicar algo, hipóteses não precisavam ser desnecessariamente multiplicadas.
-* Para a modelagem estatística, o **princípio da parcimônia** significa que:
-    + modelos devem ter tão poucos parâmetros quanto possível;
-    + modelos lineares devem ser preferidos a modelos não-lineares;
-    + experimentos que dependem de poucas hipóteses devem ser preferidos em relação àqueles que dependem de muitas;
-    + modelos devem ser gradualmente reduzidos até que sejam *mínimos e adequados*;
-    + explicações simples devem ser preferidas às complexas.
+##  Próximo Bloco {.standout}
 
 
-## Regressão Linear Simples
-
-### \Large Assunto do próximo bloco!
+Regressão Linear Simples
